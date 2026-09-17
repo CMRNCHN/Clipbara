@@ -38,6 +38,7 @@ struct PreviewView: View {
             removal: .opacity.combined(with: .scale(scale: 0.98, anchor: .bottom))
         ))
         .task(id: item.id) {
+            guard !item.isSensitive else { return }
             if item.contentType == .image {
                 let img = NSImage(data: item.rawData)
                 cachedNSImage = img
@@ -138,17 +139,21 @@ struct PreviewView: View {
     @ViewBuilder
     private var previewContent: some View {
         Group {
-            switch item.contentType {
-            case .plainText, .richText, .html, .unknown:
-                textPreview
-            case .image:
-                imagePreview
-            case .url:
-                urlPreview
-            case .fileURL:
-                filePreview
-            case .color:
-                colorPreview
+            if item.isSensitive {
+                SensitiveCardContent(item: item)
+            } else {
+                switch item.contentType {
+                case .plainText, .richText, .html, .unknown:
+                    textPreview
+                case .image:
+                    imagePreview
+                case .url:
+                    urlPreview
+                case .fileURL:
+                    filePreview
+                case .color:
+                    colorPreview
+                }
             }
         }
         .frame(maxHeight: .infinity)
@@ -361,6 +366,7 @@ struct PreviewView: View {
     }
 
     private var metadataText: String {
+        if item.isSensitive { return "Encrypted · auto-erases" }
         switch item.contentType {
         case .plainText, .richText, .html, .unknown:
             let (charCount, wordCount, lineCount) = cachedTextMetadata

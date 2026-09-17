@@ -6,6 +6,7 @@ private enum DroppedClipResult {
     case added(String)
     case alreadyAdded(String)
     case missing
+    case sensitive
 }
 
 struct NavigationBarView: View {
@@ -327,6 +328,8 @@ struct NavigationBarView: View {
             return .missing
         }
 
+        guard !item.isSensitive else { return .sensitive }
+
         let alreadyAdded = pinboard.entries.contains { $0.clipboardItem?.id == itemId }
         guard !alreadyAdded else { return .alreadyAdded(pinboard.name) }
 
@@ -346,6 +349,8 @@ struct NavigationBarView: View {
             appState.showToast("Already in \(name)", systemImage: "checkmark.circle")
         case .missing:
             appState.showToast("Could not add clip", systemImage: "exclamationmark.triangle.fill")
+        case .sensitive:
+            appState.showToast("Sensitive clips can't be pinned", systemImage: "lock.fill")
         }
     }
 

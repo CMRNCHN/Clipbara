@@ -51,6 +51,7 @@ targets:
         com.apple.security.app-sandbox: true
         com.apple.security.files.user-selected.read-write: true
         com.apple.security.network.client: true
+        com.apple.security.automation.apple-events: true
 
   # Mac App Store distribution (sandboxed, no Sparkle)
   ClipbaraMAS:
@@ -85,3 +86,4 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.files.user-selected.read-write: true
+        com.apple.security.automation.apple-events: true

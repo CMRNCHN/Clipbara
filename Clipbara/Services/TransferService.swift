@@ -59,7 +59,9 @@ enum TransferService {
     // MARK: - Export
 
     static func exportDocument(context: ModelContext) throws -> Data {
-        let items = try context.fetch(FetchDescriptor<ClipboardItem>())
+        // Sensitive items are encrypted with a key tied to this device's Keychain and
+        // meant to auto-erase — they never leave the device in a backup.
+        let items = try context.fetch(FetchDescriptor<ClipboardItem>()).filter { !$0.isSensitive }
         let boards = try context.fetch(FetchDescriptor<Pinboard>())
         let exclusions = try context.fetch(FetchDescriptor<ExcludedApp>())
 

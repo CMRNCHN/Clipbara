@@ -8,6 +8,10 @@ struct PasteService {
     /// Backing key for the "Always Paste as Plain Text" setting (Settings > General).
     nonisolated static let alwaysPlainTextDefaultsKey = "alwaysPastePlainText"
 
+    /// Called after every successful paste so callers (AppState) can erase sensitive
+    /// items immediately when "erase after first paste" is enabled.
+    var onDidPaste: ((ClipboardItem) -> Void)?
+
     /// Whether stripping formatting is meaningful for this item (RTF/HTML only).
     static func supportsPlainText(_ item: ClipboardItem) -> Bool {
         switch item.contentType {
@@ -30,30 +34,34 @@ struct PasteService {
     func paste(item: ClipboardItem, asPlainText: Bool? = nil) {
         if asPlainText ?? Self.resolvePlainText(), Self.supportsPlainText(item) {
             pastePlainText(item: item)
+            onDidPaste?(item)
             return
         }
 
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
 
+        let text = item.decryptedTextContent()
+        let data = item.decryptedRawData()
+
         switch item.contentType {
         case .plainText, .html, .richText:
-            if let text = item.textContent {
+            if let text {
                 pasteboard.setString(text, forType: .string)
             }
             // Also set original format for rich text / HTML
             if item.contentType == .richText {
-                pasteboard.setData(item.rawData, forType: .rtf)
+                pasteboard.setData(data, forType: .rtf)
             } else if item.contentType == .html {
-                pasteboard.setData(item.rawData, forType: .html)
+                pasteboard.setData(data, forType: .html)
             }
 
         case .image:
-            guard let image = NSImage(data: item.rawData),
+            guard let image = NSImage(data: data),
                   let tiffData = image.tiffRepresentation,
                   let bitmap = NSBitmapImageRep(data: tiffData),
                   let pngData = bitmap.representation(using: .png, properties: [:]) else {
-                pasteboard.setData(item.rawData, forType: .tiff)
+                pasteboard.setData(data, forType: .tiff)
                 break
             }
 
@@ -69,7 +77,7 @@ struct PasteService {
             pasteboard.setData(tiffData, forType: .tiff)
 
         case .url:
-            if let text = item.textContent {
+            if let text {
                 pasteboard.setString(text, forType: .string)
                 if let url = URL(string: text) {
                     pasteboard.setString(url.absoluteString, forType: .URL)
@@ -77,24 +85,26 @@ struct PasteService {
             }
 
         case .fileURL:
-            if let text = item.textContent,
-               let urlString = String(data: item.rawData, encoding: .utf8) {
+            if let text,
+               let urlString = String(data: data, encoding: .utf8) {
                 pasteboard.setString(urlString, forType: .fileURL)
                 pasteboard.setString(text, forType: .string)
             }
 
         case .color:
-            if let text = item.textContent {
+            if let text {
                 pasteboard.setString(text, forType: .string)
             }
 
         case .unknown:
-            pasteboard.setData(item.rawData, forType: .string)
+            pasteboard.setData(data, forType: .string)
         }
+
+        onDidPaste?(item)
     }
 
     func pastePlainText(item: ClipboardItem) {
-        guard let text = item.textContent else { return }
+        guard let text = item.decryptedTextContent() else { return }
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)

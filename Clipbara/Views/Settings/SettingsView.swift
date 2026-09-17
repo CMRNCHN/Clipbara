@@ -24,6 +24,11 @@ struct SettingsView: View {
                     Label("Exclusions", systemImage: "nosign")
                 }
 
+            SensitiveSettingsTab()
+                .tabItem {
+                    Label("Sensitive", systemImage: "lock.shield")
+                }
+
             AboutTab()
                 .tabItem {
                     Label("About", systemImage: "info.circle")

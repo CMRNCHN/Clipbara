@@ -10,7 +10,14 @@ final class ClipboardMonitor {
     private let classifier = ContentTypeClassifier()
     private var modelContext: ModelContext?
     private var excludedBundleIds: Set<String> = []
+    private var sensitiveRules: [SensitiveRule] = []
     private var shouldSkipNextChange: Bool = false
+    private var pollTickCount: Int = 0
+
+    private var sensitiveTTLSeconds: Double {
+        let stored = UserDefaults.standard.double(forKey: "sensitiveTTLSeconds")
+        return stored > 0 ? stored : 45
+    }
 
     var isMonitoring: Bool = false
     var latestItems: [ClipboardItem] = []
@@ -23,6 +30,7 @@ final class ClipboardMonitor {
         self.modelContext = modelContext
         lastChangeCount = NSPasteboard.general.changeCount
         loadExcludedApps()
+        loadSensitiveRules()
         isMonitoring = true
 
         timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
@@ -53,6 +61,11 @@ final class ClipboardMonitor {
     }
 
     private func poll() {
+        pollTickCount += 1
+        if pollTickCount % 10 == 0 {
+            purgeExpiredSensitiveItems()
+        }
+
         let pasteboard = NSPasteboard.general
         let currentCount = pasteboard.changeCount
 
@@ -81,17 +94,22 @@ final class ClipboardMonitor {
         if isDuplicate(hash: hash) { return }
 
         let sourceApp = NSWorkspace.shared.frontmostApplication
+        let isSensitive = matchesSensitiveRule(frontApp: sourceApp)
         let item = ClipboardItem(
             contentType: content.contentType,
             rawData: content.rawData,
             textContent: content.textContent,
             sourceAppName: sourceApp?.localizedName,
             sourceAppBundleId: sourceApp?.bundleIdentifier,
-            contentHash: hash
+            contentHash: hash,
+            isSensitive: isSensitive
         )
 
-        // Generate thumbnail for images
-        if content.contentType == .image {
+        if isSensitive {
+            item.expiresAt = Date().addingTimeInterval(sensitiveTTLSeconds)
+        } else if content.contentType == .image {
+            // Sensitive images skip the plaintext thumbnail — it would otherwise sit
+            // on disk unencrypted even while the raw bytes are ciphertext.
             item.thumbnailData = generateThumbnail(from: content.rawData)
         }
 
@@ -177,5 +195,73 @@ final class ClipboardMonitor {
         let descriptor = FetchDescriptor<ExcludedApp>()
         let apps = (try? modelContext.fetch(descriptor)) ?? []
         excludedBundleIds = Set(apps.map(\.bundleId))
+    }
+
+    func loadSensitiveRules() {
+        guard let modelContext else { return }
+        let descriptor = FetchDescriptor<SensitiveRule>()
+        sensitiveRules = (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    /// Deletes a sensitive item immediately (e.g. right after it's pasted), regardless
+    /// of its TTL. Used by the "erase after first paste" setting.
+    func eraseSensitiveItemNow(_ item: ClipboardItem) {
+        guard item.isSensitive, let modelContext else { return }
+        deleteWithPinboardEntries([item], in: modelContext)
+        try? modelContext.save()
+        refreshLatestItems()
+    }
+
+    private func matchesSensitiveRule(frontApp: NSRunningApplication?) -> Bool {
+        guard let frontApp, !sensitiveRules.isEmpty else { return false }
+
+        for rule in sensitiveRules {
+            switch rule.kind {
+            case .app:
+                if frontApp.bundleIdentifier == rule.pattern { return true }
+            case .process:
+                if let name = frontApp.localizedName, name.localizedCaseInsensitiveContains(rule.pattern) {
+                    return true
+                }
+            case .domain:
+                continue
+            }
+        }
+
+        // Domain rules need a synchronous Apple Events round-trip to the browser, so
+        // only pay that cost when there's a domain rule and the front app is a browser.
+        guard let bundleID = frontApp.bundleIdentifier,
+              BrowserURLProvider.isSupportedBrowser(bundleID) else { return false }
+        let domainRules = sensitiveRules.filter { $0.kind == .domain }
+        guard !domainRules.isEmpty,
+              let host = BrowserURLProvider.currentURL(forBundleID: bundleID)?.host else { return false }
+        return domainRules.contains { host == $0.pattern || host.hasSuffix("." + $0.pattern) }
+    }
+
+    private func purgeExpiredSensitiveItems() {
+        guard let modelContext else { return }
+        let now = Date()
+        let descriptor = FetchDescriptor<ClipboardItem>(
+            predicate: #Predicate { $0.isSensitive && $0.expiresAt != nil && $0.expiresAt! <= now }
+        )
+        guard let expired = try? modelContext.fetch(descriptor), !expired.isEmpty else { return }
+        deleteWithPinboardEntries(expired, in: modelContext)
+        try? modelContext.save()
+        refreshLatestItems()
+    }
+
+    private func deleteWithPinboardEntries(_ items: [ClipboardItem], in modelContext: ModelContext) {
+        for item in items {
+            let itemId = item.id
+            let entryDescriptor = FetchDescriptor<PinboardEntry>(
+                predicate: #Predicate { $0.clipboardItem?.id == itemId }
+            )
+            if let entries = try? modelContext.fetch(entryDescriptor) {
+                for entry in entries {
+                    modelContext.delete(entry)
+                }
+            }
+            modelContext.delete(item)
+        }
     }
 }

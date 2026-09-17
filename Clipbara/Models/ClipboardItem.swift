@@ -17,6 +17,8 @@ final class ClipboardItem {
     var copiedAt: Date
     var userTitle: String?
     var isPinned: Bool
+    var isSensitive: Bool = false
+    var expiresAt: Date?
 
     var contentType: ContentType {
         get { ContentType(rawValue: contentTypeRaw) ?? .unknown }
@@ -30,12 +32,18 @@ final class ClipboardItem {
         thumbnailData: Data? = nil,
         sourceAppName: String? = nil,
         sourceAppBundleId: String? = nil,
-        contentHash: String
+        contentHash: String,
+        isSensitive: Bool = false
     ) {
         self.id = UUID()
         self.contentTypeRaw = contentType.rawValue
-        self.rawData = rawData
-        self.textContent = textContent
+        self.isSensitive = isSensitive
+        self.rawData = isSensitive ? (SensitiveEncryptionService.encrypt(rawData) ?? rawData) : rawData
+        self.textContent = isSensitive
+            ? textContent.flatMap { $0.data(using: .utf8) }
+                .flatMap { SensitiveEncryptionService.encrypt($0) }?
+                .base64EncodedString()
+            : textContent
         self.thumbnailData = thumbnailData
         self.sourceAppName = sourceAppName
         self.sourceAppBundleId = sourceAppBundleId
@@ -44,15 +52,34 @@ final class ClipboardItem {
         self.isPinned = false
     }
 
+    /// Plaintext bytes, decrypting on the fly for sensitive items. `rawData` itself
+    /// stays ciphertext at rest — callers that render or paste content must go through
+    /// this instead, and UI that lists/badges items must gate on `isSensitive` first
+    /// rather than ever touching `rawData`/`textContent` directly.
+    func decryptedRawData() -> Data {
+        guard isSensitive, let plain = SensitiveEncryptionService.decrypt(rawData) else { return rawData }
+        return plain
+    }
+
+    func decryptedTextContent() -> String? {
+        guard isSensitive else { return textContent }
+        guard let stored = textContent,
+              let cipher = Data(base64Encoded: stored),
+              let plain = SensitiveEncryptionService.decrypt(cipher) else { return nil }
+        return String(data: plain, encoding: .utf8)
+    }
+
     func dragProvider() -> NSItemProvider {
         let provider: NSItemProvider
+        let plainText = decryptedTextContent()
+        let plainData = decryptedRawData()
 
         switch contentType {
         case .plainText, .richText, .html, .unknown:
-            provider = NSItemProvider(object: (textContent ?? "") as NSString)
+            provider = NSItemProvider(object: (plainText ?? "") as NSString)
 
         case .image:
-            if let image = NSImage(data: rawData),
+            if let image = NSImage(data: plainData),
                let tiff = image.tiffRepresentation,
                let bitmap = NSBitmapImageRep(data: tiff),
                let pngData = bitmap.representation(using: .png, properties: [:]) {
@@ -75,21 +102,21 @@ final class ClipboardItem {
             }
 
         case .url:
-            if let text = textContent, let url = URL(string: text) {
+            if let text = plainText, let url = URL(string: text) {
                 provider = NSItemProvider(object: url as NSURL)
             } else {
-                provider = NSItemProvider(object: (textContent ?? "") as NSString)
+                provider = NSItemProvider(object: (plainText ?? "") as NSString)
             }
 
         case .fileURL:
-            if let text = textContent, let url = URL(string: text) {
+            if let text = plainText, let url = URL(string: text) {
                 provider = NSItemProvider(object: url as NSURL)
             } else {
                 provider = NSItemProvider()
             }
 
         case .color:
-            provider = NSItemProvider(object: (textContent ?? "") as NSString)
+            provider = NSItemProvider(object: (plainText ?? "") as NSString)
         }
 
         provider.registerDataRepresentation(

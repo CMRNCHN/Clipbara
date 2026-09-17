@@ -74,7 +74,7 @@ struct ClipboardCardView: View {
                 renameText = item.userTitle ?? ""
                 isRenaming = true
             }
-            if !pinboards.isEmpty {
+            if !pinboards.isEmpty && !item.isSensitive {
                 Menu("Add to Pinboard") {
                     ForEach(pinboards) { pinboard in
                         let alreadyAdded = pinboard.entries.contains { $0.clipboardItem?.id == item.id }
@@ -189,13 +189,15 @@ struct ClipboardCardView: View {
     }
 
     private var typeBadge: some View {
-        let tint = DesignTokens.typeTint(for: item.contentType, itemColor: item.textContent)
+        let tint = item.isSensitive
+            ? Color.secondary
+            : DesignTokens.typeTint(for: item.contentType, itemColor: item.textContent)
 
         return HStack(spacing: 5) {
-            Image(systemName: item.contentType.systemImage)
+            Image(systemName: item.isSensitive ? "lock.fill" : item.contentType.systemImage)
                 .font(.system(size: 10, weight: .semibold))
 
-            Text(item.userTitle ?? item.contentType.displayName)
+            Text(item.isSensitive ? "Sensitive" : (item.userTitle ?? item.contentType.displayName))
                 .font(DesignTokens.Header.titleFont)
                 .lineLimit(1)
         }
@@ -242,6 +244,7 @@ struct ClipboardCardView: View {
     }
 
     private var footerInfo: String {
+        if item.isSensitive { return "Encrypted" }
         switch item.contentType {
         case .plainText, .richText, .html, .unknown:
             let count = item.textContent?.count ?? 0
@@ -303,19 +306,23 @@ struct ClipboardCardView: View {
 
     @ViewBuilder
     private var cardContent: some View {
-        switch item.contentType {
-        case .plainText, .richText, .html:
-            TextCardContent(item: item, searchText: searchText)
-        case .image:
-            ImageCardContent(item: item)
-        case .url:
-            LinkCardContent(item: item, searchText: searchText)
-        case .fileURL:
-            FileCardContent(item: item, searchText: searchText)
-        case .color:
-            ColorCardContent(item: item)
-        case .unknown:
-            TextCardContent(item: item, searchText: searchText)
+        if item.isSensitive {
+            SensitiveCardContent(item: item)
+        } else {
+            switch item.contentType {
+            case .plainText, .richText, .html:
+                TextCardContent(item: item, searchText: searchText)
+            case .image:
+                ImageCardContent(item: item)
+            case .url:
+                LinkCardContent(item: item, searchText: searchText)
+            case .fileURL:
+                FileCardContent(item: item, searchText: searchText)
+            case .color:
+                ColorCardContent(item: item)
+            case .unknown:
+                TextCardContent(item: item, searchText: searchText)
+            }
         }
     }
 

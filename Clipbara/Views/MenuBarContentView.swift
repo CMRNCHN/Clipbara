@@ -133,6 +133,7 @@ struct MenuBarItemRow: View {
     }
 
     private var displayText: String {
+        if item.isSensitive { return "Sensitive (encrypted)" }
         switch item.contentType {
         case .plainText, .richText, .html, .url:
             return item.textContent ?? "..."

@@ -27,6 +27,7 @@ struct ClipboardQuickLookView: View {
             }
         }
         .task(id: item.id) {
+            guard !item.isSensitive else { return }
             if item.contentType == .image {
                 let image = NSImage(data: item.rawData)
                 cachedImage = image
@@ -87,7 +88,9 @@ struct ClipboardQuickLookView: View {
     }
 
     private var toolbar: some View {
-        let tint = DesignTokens.typeTint(for: item.contentType, itemColor: item.textContent)
+        let tint = item.isSensitive
+            ? Color.secondary
+            : DesignTokens.typeTint(for: item.contentType, itemColor: item.textContent)
 
         return HStack(spacing: 10) {
             Button(action: onClose) {
@@ -99,9 +102,9 @@ struct ClipboardQuickLookView: View {
             .help("Close")
 
             HStack(spacing: 6) {
-                Image(systemName: item.contentType.systemImage)
+                Image(systemName: item.isSensitive ? "lock.fill" : item.contentType.systemImage)
                     .font(.system(size: 12, weight: .semibold))
-                Text(item.userTitle ?? item.contentType.displayName)
+                Text(item.isSensitive ? "Sensitive" : (item.userTitle ?? item.contentType.displayName))
                     .font(.system(size: 13, weight: .semibold))
                     .lineLimit(1)
             }
@@ -161,17 +164,21 @@ struct ClipboardQuickLookView: View {
 
     @ViewBuilder
     private var content: some View {
-        switch item.contentType {
-        case .plainText, .richText, .html, .unknown:
-            textContent
-        case .image:
-            imageContent
-        case .url:
-            urlContent
-        case .fileURL:
-            fileContent
-        case .color:
-            colorContent
+        if item.isSensitive {
+            SensitiveCardContent(item: item)
+        } else {
+            switch item.contentType {
+            case .plainText, .richText, .html, .unknown:
+                textContent
+            case .image:
+                imageContent
+            case .url:
+                urlContent
+            case .fileURL:
+                fileContent
+            case .color:
+                colorContent
+            }
         }
     }
 
@@ -369,6 +376,7 @@ struct ClipboardQuickLookView: View {
     }
 
     private var primaryMetadata: String {
+        if item.isSensitive { return "Encrypted · auto-erases" }
         switch item.contentType {
         case .plainText, .richText, .html, .unknown:
             return "\(cachedCharCount) chars"

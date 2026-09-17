@@ -17,7 +17,7 @@ struct PanelToast: Identifiable, Equatable {
 @Observable
 final class AppState {
     let clipboardMonitor = ClipboardMonitor()
-    let pasteService = PasteService()
+    var pasteService = PasteService()
     let panelController = PanelController()
     let searchState = SearchState()
 
@@ -35,6 +35,12 @@ final class AppState {
     func start(modelContext: ModelContext, modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
         clipboardMonitor.start(modelContext: modelContext)
+        pasteService.onDidPaste = { [weak self] item in
+            guard item.isSensitive else { return }
+            let eraseOnPaste = UserDefaults.standard.object(forKey: "sensitiveEraseOnPaste") as? Bool ?? true
+            guard eraseOnPaste else { return }
+            self?.clipboardMonitor.eraseSensitiveItemNow(item)
+        }
         panelController.onPanelWillHide = { [weak self] in
             self?.searchState.reset()
             self?.previewItem = nil

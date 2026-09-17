@@ -12,6 +12,7 @@ struct ClipbaraApp: App {
             Pinboard.self,
             PinboardEntry.self,
             ExcludedApp.self,
+            SensitiveRule.self,
         ])
 
         let storeURL = StoreManager.resolveStoreURL()
