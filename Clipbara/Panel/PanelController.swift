@@ -17,6 +17,8 @@ final class PanelController {
     private(set) var isVisible: Bool = false
     private var clickMonitor: Any?
     private var mouseMonitor: Any?
+    private var scrollMonitor: Any?
+    private var wheelTranslator = WheelScrollTranslation.Translator()
     private var keyMonitor: Any?
     var onPanelWillHide: (() -> Void)?
     weak var appState: AppState?
@@ -152,6 +154,7 @@ final class PanelController {
         appState.markPanelPresented()
         installClickMonitor()
         installMouseMonitor()
+        installScrollMonitor()
         installKeyMonitor()
     }
 
@@ -198,6 +201,7 @@ final class PanelController {
 
         removeClickMonitor()
         removeMouseMonitor()
+        removeScrollMonitor()
         removeKeyMonitor()
 
         panel.hasShadow = false
@@ -273,6 +277,62 @@ final class PanelController {
         }
     }
 
+    // MARK: - Scroll Monitor (mouse wheel over the sideways card rows)
+
+    private func installScrollMonitor() {
+        scrollMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { event in
+            let handled: Bool = MainActor.assumeIsolated { [weak self] in
+                self?.translateWheelToHorizontalScroll(event) ?? false
+            }
+            return handled ? nil : event
+        }
+    }
+
+    private func removeScrollMonitor() {
+        if let monitor = scrollMonitor {
+            NSEvent.removeMonitor(monitor)
+            scrollMonitor = nil
+        }
+    }
+
+    /// Re-sends a mouse wheel as horizontal movement over a sideways card row.
+    private func translateWheelToHorizontalScroll(_ event: NSEvent) -> Bool {
+        guard isVisible,
+              let window = event.window,
+              window === panel || window === quickLookPanel,
+              let scrollView = horizontalScrollView(under: event, in: window) else { return false }
+
+        let clip = scrollView.contentView.bounds.size
+        let document = scrollView.documentView?.frame.size ?? .zero
+        let input = WheelScrollTranslation.Input(
+            deltaX: event.scrollingDeltaX,
+            deltaY: event.scrollingDeltaY,
+            phase: WheelScrollTranslation.phase(of: event),
+            canScrollHorizontally: document.width - clip.width > 0.5,
+            canScrollVertically: document.height - clip.height > 0.5
+        )
+        guard wheelTranslator.shouldTranslate(input) else { return false }
+
+        guard let horizontalEvent = WheelScrollTranslation.horizontalCopy(of: event) else { return false }
+        scrollView.scrollWheel(with: horizontalEvent)
+        return true
+    }
+
+    private func horizontalScrollView(under event: NSEvent, in window: NSWindow) -> NSScrollView? {
+        guard let contentView = window.contentView else { return nil }
+        let point = contentView.convert(event.locationInWindow, from: nil)
+        guard let hit = contentView.hitTest(point) else { return nil }
+
+        var view: NSView? = hit
+        while let current = view {
+            if let scrollView = current as? NSScrollView {
+                return scrollView
+            }
+            view = current.superview
+        }
+        return nil
+    }
+
     private func releaseTextFocusIfNeeded(for event: NSEvent) {
         guard isVisible, let panel else { return }
 
@@ -305,7 +365,19 @@ final class PanelController {
         return false
     }
 
-    // MARK: - Key Monitor (arrow keys, space, esc, return)
+    /// Shared by mouse tabs and Cmd+number. Clear the old navigation cache
+    /// synchronously so a fast Return cannot paste an item from the old tab
+    /// while SwiftUI is still rendering the new one.
+    func selectTab(_ tab: PanelTab) {
+        guard let appState, isVisible, appState.selectedTab != tab else { return }
+        if quickLookPanel != nil { hideQuickLook() }
+        appState.selectForPreview(nil)
+        appState.searchState.selectedIndex = nil
+        appState.currentFilteredItems = []
+        appState.selectedTab = tab
+    }
+
+    // MARK: - Key Monitor (tab shortcuts, arrow keys, space, esc, return)
 
     private func installKeyMonitor() {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
@@ -320,6 +392,21 @@ final class PanelController {
                    eventWindowNumber != self.panel?.windowNumber,
                    eventWindowNumber != self.quickLookPanel?.windowNumber {
                     return false
+                }
+
+                // Never navigate behind a create/rename/delete sheet or modal.
+                guard self.panel?.attachedSheet == nil,
+                      self.quickLookPanel?.attachedSheet == nil,
+                      NSApp.modalWindow == nil else { return false }
+
+                // Handle tab shortcuts before the search-field pass-through.
+                // Missing tabs are a no-op, not a shortcut for the frontmost app.
+                if let index = PanelTabShortcut.index(keyCode: keyCode, modifiers: event.modifierFlags) {
+                    if let appState = self.appState,
+                       let tab = PanelTabShortcut.target(at: index, pinboardIDs: appState.orderedPinboardIDs) {
+                        self.selectTab(tab)
+                    }
+                    return true
                 }
 
                 if self.quickLookPanel != nil {
@@ -383,7 +470,7 @@ final class PanelController {
                 return true
             }
             if appState.selectedTab != .history {
-                appState.selectedTab = .history
+                selectTab(.history)
                 return true
             }
             appState.hidePanel()
