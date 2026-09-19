@@ -18,11 +18,15 @@ struct HistoryPanelView: View {
                 NavigationBarView()
 
                 ZStack {
-                    // Cards layer
+                    // Cards/Timeline layer
                     Group {
-                        CardGridView()
-                            .opacity(appState.selectedTab == .history ? 1 : 0)
-                            .allowsHitTesting(appState.selectedTab == .history)
+                        if appState.selectedTab == .history {
+                            if appState.historyViewMode == .grid {
+                                CardGridView()
+                            } else {
+                                ClipboardTimelineView()
+                            }
+                        }
 
                         if case .pinboard(let id) = appState.selectedTab {
                             PinboardGridView(pinboardId: id)
@@ -54,6 +58,14 @@ struct HistoryPanelView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                // Recent items panel at bottom
+                if appState.selectedTab == .history && appState.historyViewMode == .grid {
+                    Divider()
+                    RecentItemsPanel()
+                        .padding(12)
+                        .frame(height: 140)
+                }
             }
             .onChange(of: appState.selectedTab) { _, _ in
                 appState.selectForPreview(nil)

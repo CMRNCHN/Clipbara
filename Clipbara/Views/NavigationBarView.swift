@@ -176,6 +176,17 @@ struct NavigationBarView: View {
 
             if appState.selectedTab == .history {
                 NavIconButton(
+                    icon: appState.historyViewMode == .grid ? "rectangle.grid.2x2" : "list.bullet",
+                    iconSize: 12,
+                    colorScheme: colorScheme
+                ) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        appState.historyViewMode = appState.historyViewMode == .grid ? .timeline : .grid
+                    }
+                }
+                .help(appState.historyViewMode == .grid ? "Switch to Timeline" : "Switch to Grid")
+
+                NavIconButton(
                     icon: "trash",
                     iconSize: 13,
                     colorScheme: colorScheme

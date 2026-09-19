@@ -2,6 +2,11 @@ import SwiftUI
 import SwiftData
 import KeyboardShortcuts
 
+enum HistoryViewMode: String, Codable {
+    case grid
+    case timeline
+}
+
 struct PanelToast: Identifiable, Equatable {
     let id = UUID()
     let message: String
@@ -23,6 +28,7 @@ final class AppState {
     var panelToast: PanelToast?
     var panelPresentationID = 0
     var draggedClipboardItemID: UUID?
+    var historyViewMode: HistoryViewMode = .grid
     @ObservationIgnored private var toastTask: Task<Void, Never>?
     private(set) var modelContainer: ModelContainer?
 
