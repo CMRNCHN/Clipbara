@@ -21,16 +21,22 @@ struct MenuBarContentView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
             } else {
-                Text("Recent Copies")
+                Text("Quick Access")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 12)
                     .padding(.top, 8)
-                    .padding(.bottom, 4)
+                    .padding(.bottom, 8)
 
-                ForEach(topItems) { item in
-                    MenuBarItemRow(item: item)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(topItems) { item in
+                            MenuBarThumbnailTile(item: item)
+                        }
+                    }
+                    .padding(.horizontal, 12)
                 }
+                .frame(height: 70)
             }
 
             Divider()
@@ -89,54 +95,95 @@ struct MenuBarContentView: View {
             .padding(.vertical, 4)
             .padding(.bottom, 4)
         }
-        .frame(width: 280)
+        .frame(width: 380)
     }
 }
 
-struct MenuBarItemRow: View {
+struct MenuBarThumbnailTile: View {
     let item: ClipboardItem
     @Environment(AppState.self) private var appState
+    @State private var isHovered = false
 
     var body: some View {
         Button {
             appState.clipboardMonitor.skipNextChange()
             appState.pasteService.paste(item: item)
         } label: {
-            HStack(spacing: 8) {
-                Image(systemName: item.contentType.systemImage)
-                    .frame(width: 16)
-                    .foregroundStyle(.secondary)
+            ZStack(alignment: .bottomLeading) {
+                // Thumbnail background
+                if item.isSensitive {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.secondary.opacity(0.2))
+                } else if item.contentType == .image {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.gray.opacity(0.1))
 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(displayText)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .font(.system(size: 13))
-
-                    HStack(spacing: 4) {
-                        if let appName = item.sourceAppName {
-                            Text(appName)
-                        }
-                        Text(RelativeTimeFormatter.string(for: item.copiedAt))
+                    if let data = item.thumbnailData ?? item.decryptedRawData() as Data?,
+                       let image = NSImage(data: data) {
+                        Image(nsImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .clipped()
+                            .cornerRadius(6)
                     }
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                } else {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color(nsColor: .controlBackgroundColor))
                 }
 
-                Spacer()
+                // Type badge
+                HStack(spacing: 3) {
+                    Image(systemName: typeIcon)
+                        .font(.system(size: 9, weight: .semibold))
+                    Text(typeLabel)
+                        .font(.system(size: 9, weight: .semibold))
+                }
+                .foregroundStyle(.white)
+                .padding(.vertical, 3)
+                .padding(.horizontal, 6)
+                .background(Color.accentColor)
+                .cornerRadius(4)
+                .padding(4)
+
+                // Hover overlay with details
+                if isHovered {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(displayText)
+                            .lineLimit(2)
+                            .font(.system(size: 11, weight: .medium))
+
+                        if let appName = item.sourceAppName {
+                            Text(appName)
+                                .lineLimit(1)
+                                .font(.system(size: 9))
+                                .opacity(0.8)
+                        }
+
+                        Text(RelativeTimeFormatter.string(for: item.copiedAt))
+                            .lineLimit(1)
+                            .font(.system(size: 9))
+                            .opacity(0.7)
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(6)
+                    .background(Color.black.opacity(0.75))
+                    .cornerRadius(6)
+                }
             }
-            .contentShape(Rectangle())
+            .frame(width: 60, height: 60)
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 3)
+        .onHover { hovering in
+            isHovered = hovering
+        }
     }
 
     private var displayText: String {
-        if item.isSensitive { return "Sensitive (encrypted)" }
+        if item.isSensitive { return "Sensitive" }
         switch item.contentType {
         case .plainText, .richText, .html, .url:
-            return item.textContent ?? "..."
+            return item.textContent ?? "—"
         case .image:
             return "Image"
         case .fileURL:
@@ -145,6 +192,27 @@ struct MenuBarItemRow: View {
             return item.textContent ?? "Color"
         case .unknown:
             return "Unknown"
+        }
+    }
+
+    private var typeIcon: String {
+        if item.isSensitive { return "lock.fill" }
+        if item.isScreenshot { return "screenshot.fill" }
+        return item.contentType.systemImage
+    }
+
+    private var typeLabel: String {
+        if item.isSensitive { return "Secure" }
+        if item.isScreenshot { return "SS" }
+        switch item.contentType {
+        case .plainText: return "TXT"
+        case .richText: return "RTF"
+        case .html: return "HTML"
+        case .image: return "IMG"
+        case .url: return "URL"
+        case .fileURL: return "FILE"
+        case .color: return "CLR"
+        case .unknown: return "?"
         }
     }
 }
