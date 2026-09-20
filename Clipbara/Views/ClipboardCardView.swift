@@ -122,14 +122,8 @@ struct ClipboardCardView: View {
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Card.cornerRadius, style: .continuous)
                 .strokeBorder(
-                    isSelected
-                        ? DesignTokens.Selection.borderColor
-                        : (isHovered
-                            ? DesignTokens.Selection.borderColor.opacity(0.45)
-                            : DesignTokens.Card.borderColor(for: colorScheme)),
-                    lineWidth: isSelected
-                        ? DesignTokens.Selection.borderWidth
-                        : (isHovered ? DesignTokens.Selection.hoverBorderWidth : DesignTokens.Selection.defaultBorderWidth)
+                    borderColorForCard(),
+                    lineWidth: borderWidthForCard()
                 )
         )
         .shadow(
@@ -155,6 +149,30 @@ struct ClipboardCardView: View {
     private func handleTap() {
         onSelect(item)
         onPaste(item)
+    }
+
+    private func borderColorForCard() -> Color {
+        if isSelected {
+            return DesignTokens.Selection.borderColor
+        } else if item.isScreenshot {
+            return Color.accentColor.opacity(isHovered ? 0.6 : 0.4)
+        } else if isHovered {
+            return DesignTokens.Selection.borderColor.opacity(0.45)
+        } else {
+            return DesignTokens.Card.borderColor(for: colorScheme)
+        }
+    }
+
+    private func borderWidthForCard() -> CGFloat {
+        if isSelected {
+            return DesignTokens.Selection.borderWidth
+        } else if item.isScreenshot {
+            return 1.5
+        } else if isHovered {
+            return DesignTokens.Selection.hoverBorderWidth
+        } else {
+            return DesignTokens.Selection.defaultBorderWidth
+        }
     }
 
     // MARK: - Header View
@@ -189,23 +207,29 @@ struct ClipboardCardView: View {
     }
 
     private var typeBadge: some View {
-        let tint = item.isSensitive
-            ? Color.secondary
-            : DesignTokens.typeTint(for: item.contentType, itemColor: item.textContent)
-
         let iconName: String
         let displayName: String
+        let useAccentColor: Bool
 
         if item.isSensitive {
             iconName = "lock.fill"
             displayName = "Sensitive"
+            useAccentColor = false
         } else if item.isScreenshot {
             iconName = "screenshot.fill"
             displayName = item.userTitle ?? "Screenshot"
+            useAccentColor = true
         } else {
             iconName = item.contentType.systemImage
             displayName = item.userTitle ?? item.contentType.displayName
+            useAccentColor = false
         }
+
+        let tint = useAccentColor
+            ? Color.accentColor
+            : (item.isSensitive
+                ? Color.secondary
+                : DesignTokens.typeTint(for: item.contentType, itemColor: item.textContent))
 
         return HStack(spacing: 5) {
             Image(systemName: iconName)
