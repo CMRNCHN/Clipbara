@@ -1,113 +1,41 @@
 import Foundation
 import AppKit
+import os.log
 
 actor ScreenshotManager {
-    private let fileManager = FileManager.default
-    private var lastProcessedScreenshots: Set<String> = []
+    private let logger = Logger(subsystem: "com.minsang.Clipbara", category: "ScreenshotManager")
 
-    // Monitor typical screenshot locations for new files
-    private let screenshotDirectories: [String] = [
-        "~/Desktop".expandingTildeInPath,
-        "~/Pictures".expandingTildeInPath,
-        "~/Downloads".expandingTildeInPath,
-    ]
-
-    func captureScreenshot() async -> NSImage? {
-        // Take a screenshot using macOS screenshot functionality
+    func captureScreenshot() async -> Data? {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
-
-        // Use -c to copy to clipboard, -i for interactive
         task.arguments = ["-c", "-i"]
 
-        do {
-            try task.run()
-            task.waitUntilExit()
-
-            // Wait a moment for pasteboard to update
-            try? await Task.sleep(for: .milliseconds(500))
-
-            // Check if an image is on the pasteboard
-            return self.getScreenshotFromPasteboard()
-        } catch {
-            return nil
-        }
-    }
-
-    func getScreenshotFromPasteboard() -> NSImage? {
-        let pasteboard = NSPasteboard.general
-        guard let imageData = pasteboard.data(forType: .tiff) ?? pasteboard.data(forType: .png) else {
-            return nil
-        }
-        return NSImage(data: imageData)
-    }
-
-    func checkForNewScreenshots() async -> [ScreenshotFile] {
-        var newScreenshots: [ScreenshotFile] = []
-
-        for directory in screenshotDirectories {
-            guard fileManager.fileExists(atPath: directory) else { continue }
+        let exitCode = try? await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Int32, Error>) in
+            task.terminationHandler = { _ in
+                continuation.resume(returning: task.terminationStatus)
+            }
 
             do {
-                let files = try fileManager.contentsOfDirectory(
-                    at: URL(fileURLWithPath: directory),
-                    includingPropertiesForKeys: [.contentModificationDateKey],
-                    options: [.skipsHiddenFiles]
-                )
-
-                for file in files {
-                    guard isScreenshot(file) else { continue }
-
-                    let fileName = file.lastPathComponent
-                    guard !lastProcessedScreenshots.contains(fileName) else { continue }
-
-                    if let modDate = try file.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate,
-                       Date().timeIntervalSince(modDate) < 30 {
-                        // Recent screenshot (within last 30 seconds)
-                        lastProcessedScreenshots.insert(fileName)
-                        newScreenshots.append(ScreenshotFile(url: file, date: modDate))
-                    }
-                }
+                try task.run()
             } catch {
-                continue
+                continuation.resume(throwing: error)
             }
         }
 
-        return newScreenshots
-    }
-
-    private func isScreenshot(_ file: URL) -> Bool {
-        let name = file.lastPathComponent.lowercased()
-        let imageExtensions = ["png", "jpg", "jpeg"]
-
-        // Check if it's an image
-        guard imageExtensions.contains(where: { name.hasSuffix($0) }) else {
-            return false
+        // Exit code 1 = user cancelled (Esc), or task.run() threw
+        guard let code = exitCode, code == 0 else {
+            logger.debug("Screenshot capture failed or was cancelled")
+            return nil
         }
 
-        // Check if filename matches macOS screenshot pattern
-        return name.hasPrefix("screenshot") ||
-               name.hasPrefix("screen shot") ||
-               name.contains("screenshot")
-    }
-}
+        // Wait a moment for pasteboard to update
+        try? await Task.sleep(for: .milliseconds(500))
 
-struct ScreenshotFile: Hashable {
-    let url: URL
-    let date: Date
-
-    var data: Data? {
-        try? Data(contentsOf: url)
+        return getScreenshotDataFromPasteboard()
     }
 
-    var image: NSImage? {
-        guard let data else { return nil }
-        return NSImage(data: data)
-    }
-}
-
-extension String {
-    var expandingTildeInPath: String {
-        NSString(string: self).expandingTildeInPath
+    private func getScreenshotDataFromPasteboard() -> Data? {
+        let pasteboard = NSPasteboard.general
+        return pasteboard.data(forType: .tiff) ?? pasteboard.data(forType: .png)
     }
 }

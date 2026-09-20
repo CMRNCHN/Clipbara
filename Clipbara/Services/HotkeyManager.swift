@@ -9,4 +9,8 @@ extension KeyboardShortcuts.Name {
         "clearHistory",
         default: .init(.delete, modifiers: [.shift, .command])
     )
+    static let captureScreenshot = Self(
+        "captureScreenshot",
+        default: .init(.s, modifiers: [.control, .command])
+    )
 }

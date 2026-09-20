@@ -118,5 +118,10 @@ final class AppState {
                 self?.clearHistoryRequested = true
             }
         }
+        KeyboardShortcuts.onKeyDown(for: .captureScreenshot) { [weak self] in
+            Task { @MainActor in
+                self?.clipboardMonitor.captureScreenshot()
+            }
+        }
     }
 }

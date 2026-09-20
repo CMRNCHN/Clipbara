@@ -193,11 +193,25 @@ struct ClipboardCardView: View {
             ? Color.secondary
             : DesignTokens.typeTint(for: item.contentType, itemColor: item.textContent)
 
+        let iconName: String
+        let displayName: String
+
+        if item.isSensitive {
+            iconName = "lock.fill"
+            displayName = "Sensitive"
+        } else if item.isScreenshot {
+            iconName = "screenshot.fill"
+            displayName = item.userTitle ?? "Screenshot"
+        } else {
+            iconName = item.contentType.systemImage
+            displayName = item.userTitle ?? item.contentType.displayName
+        }
+
         return HStack(spacing: 5) {
-            Image(systemName: item.isSensitive ? "lock.fill" : item.contentType.systemImage)
+            Image(systemName: iconName)
                 .font(.system(size: 10, weight: .semibold))
 
-            Text(item.isSensitive ? "Sensitive" : (item.userTitle ?? item.contentType.displayName))
+            Text(displayName)
                 .font(DesignTokens.Header.titleFont)
                 .lineLimit(1)
         }

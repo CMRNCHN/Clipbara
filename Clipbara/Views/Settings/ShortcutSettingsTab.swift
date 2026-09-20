@@ -16,6 +16,11 @@ struct ShortcutSettingsTab: View {
                 KeyboardShortcuts.Recorder(for: .clearHistory)
             }
             HStack {
+                Text("Capture Screenshot")
+                Spacer()
+                KeyboardShortcuts.Recorder(for: .captureScreenshot)
+            }
+            HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 5) {
                         Text("Quick Look Preview")

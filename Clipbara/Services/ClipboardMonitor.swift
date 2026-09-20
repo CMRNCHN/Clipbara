@@ -8,10 +8,12 @@ final class ClipboardMonitor {
     private var timer: Timer?
     private var lastChangeCount: Int = 0
     private let classifier = ContentTypeClassifier()
+    private let screenshotManager = ScreenshotManager()
     private var modelContext: ModelContext?
     private var excludedBundleIds: Set<String> = []
     private var sensitiveRules: [SensitiveRule] = []
     private var shouldSkipNextChange: Bool = false
+    private var expectingScreenshot: Bool = false
     private var pollTickCount: Int = 0
 
     private var sensitiveTTLSeconds: Double {
@@ -74,6 +76,7 @@ final class ClipboardMonitor {
 
         if shouldSkipNextChange {
             shouldSkipNextChange = false
+            expectingScreenshot = false
             return
         }
 
@@ -81,20 +84,31 @@ final class ClipboardMonitor {
         if let frontApp = NSWorkspace.shared.frontmostApplication,
            let bundleId = frontApp.bundleIdentifier,
            excludedBundleIds.contains(bundleId) {
+            expectingScreenshot = false
             return
         }
 
-        guard let content = classifier.classify(pasteboard) else { return }
+        guard let content = classifier.classify(pasteboard) else {
+            expectingScreenshot = false
+            return
+        }
 
         let hash = SHA256.hash(data: content.rawData)
             .compactMap { String(format: "%02x", $0) }
             .joined()
 
         // Duplicate check within last 10 seconds
-        if isDuplicate(hash: hash) { return }
+        if isDuplicate(hash: hash) {
+            expectingScreenshot = false
+            return
+        }
 
         let sourceApp = NSWorkspace.shared.frontmostApplication
         let isSensitive = matchesSensitiveRule(frontApp: sourceApp)
+
+        // Determine source type: screenshot if expectingScreenshot and it's an image
+        let sourceType: SourceType = (expectingScreenshot && content.contentType == .image) ? .screenshot : .clipboard
+
         let item = ClipboardItem(
             contentType: content.contentType,
             rawData: content.rawData,
@@ -102,8 +116,11 @@ final class ClipboardMonitor {
             sourceAppName: sourceApp?.localizedName,
             sourceAppBundleId: sourceApp?.bundleIdentifier,
             contentHash: hash,
-            isSensitive: isSensitive
+            isSensitive: isSensitive,
+            sourceType: sourceType
         )
+
+        expectingScreenshot = false
 
         if isSensitive {
             item.expiresAt = Date().addingTimeInterval(sensitiveTTLSeconds)
@@ -188,6 +205,18 @@ final class ClipboardMonitor {
 
     func skipNextChange() {
         shouldSkipNextChange = true
+    }
+
+    func captureScreenshot() {
+        Task {
+            expectingScreenshot = true
+            _ = await screenshotManager.captureScreenshot()
+            // If capture was cancelled or failed, clear the flag after a timeout
+            try? await Task.sleep(for: .seconds(2))
+            if expectingScreenshot {
+                expectingScreenshot = false
+            }
+        }
     }
 
     func loadExcludedApps() {

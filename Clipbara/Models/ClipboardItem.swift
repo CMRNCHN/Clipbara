@@ -3,6 +3,12 @@ import AppKit
 import SwiftData
 import UniformTypeIdentifiers
 
+enum SourceType: String, Codable {
+    case clipboard
+    case screenshot
+    case drag
+}
+
 @Model
 final class ClipboardItem {
 
@@ -19,10 +25,20 @@ final class ClipboardItem {
     var isPinned: Bool
     var isSensitive: Bool = false
     var expiresAt: Date?
+    var sourceTypeRaw: String = SourceType.clipboard.rawValue
 
     var contentType: ContentType {
         get { ContentType(rawValue: contentTypeRaw) ?? .unknown }
         set { contentTypeRaw = newValue.rawValue }
+    }
+
+    var sourceType: SourceType {
+        get { SourceType(rawValue: sourceTypeRaw) ?? .clipboard }
+        set { sourceTypeRaw = newValue.rawValue }
+    }
+
+    var isScreenshot: Bool {
+        sourceType == .screenshot
     }
 
     init(
@@ -33,7 +49,8 @@ final class ClipboardItem {
         sourceAppName: String? = nil,
         sourceAppBundleId: String? = nil,
         contentHash: String,
-        isSensitive: Bool = false
+        isSensitive: Bool = false,
+        sourceType: SourceType = .clipboard
     ) {
         self.id = UUID()
         self.contentTypeRaw = contentType.rawValue
@@ -50,6 +67,7 @@ final class ClipboardItem {
         self.contentHash = contentHash
         self.copiedAt = Date()
         self.isPinned = false
+        self.sourceTypeRaw = sourceType.rawValue
     }
 
     /// Plaintext bytes, decrypting on the fly for sensitive items. `rawData` itself
