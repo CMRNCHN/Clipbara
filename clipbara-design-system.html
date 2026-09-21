@@ -1,0 +1,614 @@
+<title>Clipbara Design System</title>
+<style>
+  :root {
+    /* Semantic Colors - Light Mode */
+    --bg-primary-light: #FFFFFF;
+    --bg-secondary-light: #F5F5F7;
+    --bg-tertiary-light: #EBEBF0;
+    --bg-elevated-light: #FFFFFF;
+    --surface-light: #FFFFFF;
+
+    --text-primary-light: #000000;
+    --text-secondary-light: #3C3C43;
+    --text-tertiary-light: #8E8E93;
+    --text-quaternary-light: #C7C7CC;
+
+    --border-primary-light: #E5E5EA;
+    --border-secondary-light: #D1D1D6;
+
+    --fill-primary-light: #000000;
+    --fill-secondary-light: #3C3C43;
+    --fill-tertiary-light: #EBEBF0;
+    --fill-quaternary-light: #F2F2F7;
+
+    /* Semantic Colors - Dark Mode */
+    --bg-primary-dark: #000000;
+    --bg-secondary-dark: #1C1C1E;
+    --bg-tertiary-dark: #2C2C2E;
+    --bg-elevated-dark: #1C1C1E;
+    --surface-dark: #1C1C1E;
+
+    --text-primary-dark: #FFFFFF;
+    --text-secondary-dark: #EBEBF5;
+    --text-tertiary-dark: #8E8E93;
+    --text-quaternary-dark: #545458;
+
+    --border-primary-dark: #38383A;
+    --border-secondary-dark: #545458;
+
+    --fill-primary-dark: #FFFFFF;
+    --fill-secondary-dark: #EBEBF5;
+    --fill-tertiary-dark: #3A3A3C;
+    --fill-quaternary-dark: #2C2C2E;
+
+    /* Accent Colors - Works in both themes */
+    --accent-blue: #0A84FF;
+    --accent-purple: #AF52DE;
+    --accent-pink: #FF375F;
+    --accent-red: #FF3B30;
+    --accent-orange: #FF9500;
+    --accent-yellow: #FFCC00;
+    --accent-green: #34C759;
+    --accent-teal: #30B0C0;
+    --accent-cyan: #32ADE6;
+    --accent-indigo: #5856D6;
+
+    /* Specific to Clipbara */
+    --color-text-accent: #3F63E2;
+    --color-image-accent: #2B3B95;
+    --color-url-accent: #009688;
+    --color-file-accent: #E57E21;
+
+    /* Typography Scale */
+    --font-family-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-family-mono: "SF Mono", Monaco, "Cascadia Code", monospace;
+
+    --font-size-display: 32px;
+    --font-size-title1: 28px;
+    --font-size-title2: 22px;
+    --font-size-title3: 20px;
+    --font-size-headline: 17px;
+    --font-size-body: 17px;
+    --font-size-callout: 16px;
+    --font-size-subheadline: 15px;
+    --font-size-footnote: 13px;
+    --font-size-caption1: 12px;
+    --font-size-caption2: 11px;
+
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    --line-height-tight: 1.2;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.8;
+
+    /* Spacing Scale */
+    --spacing-0: 0;
+    --spacing-1: 2px;
+    --spacing-2: 4px;
+    --spacing-3: 8px;
+    --spacing-4: 12px;
+    --spacing-5: 16px;
+    --spacing-6: 20px;
+    --spacing-7: 24px;
+    --spacing-8: 32px;
+    --spacing-9: 40px;
+    --spacing-10: 48px;
+
+    /* Radius Scale */
+    --radius-none: 0;
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+
+    /* Shadow Scale */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.12);
+    --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.15);
+
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg-primary: var(--bg-primary-dark);
+      --bg-secondary: var(--bg-secondary-dark);
+      --bg-tertiary: var(--bg-tertiary-dark);
+      --bg-elevated: var(--bg-elevated-dark);
+      --surface: var(--surface-dark);
+
+      --text-primary: var(--text-primary-dark);
+      --text-secondary: var(--text-secondary-dark);
+      --text-tertiary: var(--text-tertiary-dark);
+      --text-quaternary: var(--text-quaternary-dark);
+
+      --border-primary: var(--border-primary-dark);
+      --border-secondary: var(--border-secondary-dark);
+
+      --fill-primary: var(--fill-primary-dark);
+      --fill-secondary: var(--fill-secondary-dark);
+      --fill-tertiary: var(--fill-tertiary-dark);
+      --fill-quaternary: var(--fill-quaternary-dark);
+
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.3);
+      --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg-primary: var(--bg-primary-light);
+      --bg-secondary: var(--bg-secondary-light);
+      --bg-tertiary: var(--bg-tertiary-light);
+      --bg-elevated: var(--bg-elevated-light);
+      --surface: var(--surface-light);
+
+      --text-primary: var(--text-primary-light);
+      --text-secondary: var(--text-secondary-light);
+      --text-tertiary: var(--text-tertiary-light);
+      --text-quaternary: var(--text-quaternary-light);
+
+      --border-primary: var(--border-primary-light);
+      --border-secondary: var(--border-secondary-light);
+
+      --fill-primary: var(--fill-primary-light);
+      --fill-secondary: var(--fill-secondary-light);
+      --fill-tertiary: var(--fill-tertiary-light);
+      --fill-quaternary: var(--fill-quaternary-light);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg-primary: var(--bg-primary-dark);
+    --bg-secondary: var(--bg-secondary-dark);
+    --bg-tertiary: var(--bg-tertiary-dark);
+    --bg-elevated: var(--bg-elevated-dark);
+    --surface: var(--surface-dark);
+
+    --text-primary: var(--text-primary-dark);
+    --text-secondary: var(--text-secondary-dark);
+    --text-tertiary: var(--text-tertiary-dark);
+    --text-quaternary: var(--text-quaternary-dark);
+
+    --border-primary: var(--border-primary-dark);
+    --border-secondary: var(--border-secondary-dark);
+
+    --fill-primary: var(--fill-primary-dark);
+    --fill-secondary: var(--fill-secondary-dark);
+    --fill-tertiary: var(--fill-tertiary-dark);
+    --fill-quaternary: var(--fill-quaternary-dark);
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  :root[data-theme="light"] {
+    --bg-primary: var(--bg-primary-light);
+    --bg-secondary: var(--bg-secondary-light);
+    --bg-tertiary: var(--bg-tertiary-light);
+    --bg-elevated: var(--bg-elevated-light);
+    --surface: var(--surface-light);
+
+    --text-primary: var(--text-primary-light);
+    --text-secondary: var(--text-secondary-light);
+    --text-tertiary: var(--text-tertiary-light);
+    --text-quaternary: var(--text-quaternary-light);
+
+    --border-primary: var(--border-primary-light);
+    --border-secondary: var(--border-secondary-light);
+
+    --fill-primary: var(--fill-primary-light);
+    --fill-secondary: var(--fill-secondary-light);
+    --fill-tertiary: var(--fill-tertiary-light);
+    --fill-quaternary: var(--fill-quaternary-light);
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-family-system); font-size: var(--font-size-body); line-height: var(--line-height-normal); margin: 0; padding: 0 var(--spacing-5); }
+  .container { max-width: 1000px; margin: 0 auto; padding: var(--spacing-8) 0; }
+  h1 { font-size: var(--font-size-title1); font-weight: var(--font-weight-bold); line-height: var(--line-height-tight); margin: var(--spacing-6) 0 var(--spacing-4) 0; color: var(--text-primary); letter-spacing: -0.5px; }
+  h2 { font-size: var(--font-size-title2); font-weight: var(--font-weight-bold); line-height: var(--line-height-tight); margin: var(--spacing-8) 0 var(--spacing-4) 0; color: var(--text-primary); }
+  h3 { font-size: var(--font-size-headline); font-weight: var(--font-weight-semibold); line-height: var(--line-height-tight); margin: var(--spacing-6) 0 var(--spacing-3) 0; color: var(--text-primary); }
+  h4 { font-size: var(--font-size-subheadline); font-weight: var(--font-weight-semibold); margin: var(--spacing-4) 0 var(--spacing-3) 0; color: var(--text-primary); }
+  p { margin: 0 0 var(--spacing-4) 0; color: var(--text-secondary); line-height: var(--line-height-relaxed); }
+  ul { color: var(--text-secondary); line-height: var(--line-height-relaxed); }
+
+  .color-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--spacing-5); margin: var(--spacing-6) 0; }
+  .color-swatch { border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-primary); background: var(--bg-secondary); }
+  .color-sample { height: 100px; }
+  .color-info { padding: var(--spacing-4); }
+  .color-name { font-size: var(--font-size-footnote); font-weight: var(--font-weight-semibold); color: var(--text-primary); margin-bottom: var(--spacing-1); }
+  .color-value { font-size: var(--font-size-caption2); color: var(--text-tertiary); font-family: var(--font-family-mono); }
+
+  .component { border: 1px solid var(--border-primary); border-radius: var(--radius-lg); padding: var(--spacing-5); background: var(--bg-secondary); margin: var(--spacing-5) 0; }
+  .component h4 { margin: 0 0 var(--spacing-4) 0; text-transform: uppercase; letter-spacing: 0.5px; }
+  .component-demo { background: var(--bg-primary); border: 1px solid var(--border-primary); border-radius: var(--radius-md); padding: var(--spacing-4); margin: var(--spacing-4) 0; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; padding: var(--spacing-2) var(--spacing-4); font-size: var(--font-size-callout); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: 1px solid transparent; cursor: pointer; transition: all var(--transition-normal); }
+  .btn-primary { background: var(--accent-blue); color: white; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { background: var(--fill-tertiary); color: var(--text-primary); border: 1px solid var(--border-primary); }
+  .btn-secondary:hover { background: var(--fill-quaternary); }
+  .btn-group { display: flex; gap: var(--spacing-2); margin: var(--spacing-4) 0; flex-wrap: wrap; }
+
+  .alert { border-radius: var(--radius-lg); padding: var(--spacing-4) var(--spacing-5); margin: var(--spacing-4) 0; display: flex; gap: var(--spacing-4); align-items: flex-start; }
+  .alert-success { background: rgba(52, 199, 89, 0.1); color: var(--accent-green); border: 1px solid rgba(52, 199, 89, 0.2); }
+  .alert-warning { background: rgba(255, 149, 0, 0.1); color: var(--accent-orange); border: 1px solid rgba(255, 149, 0, 0.2); }
+  .alert-error { background: rgba(255, 59, 48, 0.1); color: var(--accent-red); border: 1px solid rgba(255, 59, 48, 0.2); }
+  .alert-info { background: rgba(10, 132, 255, 0.1); color: var(--accent-blue); border: 1px solid rgba(10, 132, 255, 0.2); }
+  .alert-icon { flex-shrink: 0; font-weight: bold; font-size: 18px; }
+
+  .table { width: 100%; border-collapse: collapse; margin: var(--spacing-6) 0; border: 1px solid var(--border-primary); border-radius: var(--radius-lg); overflow: hidden; }
+  .table th { background: var(--bg-secondary); padding: var(--spacing-4) var(--spacing-5); text-align: left; font-weight: var(--font-weight-semibold); font-size: var(--font-size-footnote); color: var(--text-primary); border-bottom: 1px solid var(--border-primary); }
+  .table td { padding: var(--spacing-4) var(--spacing-5); border-bottom: 1px solid var(--border-primary); font-size: var(--font-size-footnote); color: var(--text-secondary); }
+  .table tr:last-child td { border-bottom: none; }
+
+  .example-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-5); margin: var(--spacing-5) 0; }
+  .example-item { border: 1px solid var(--border-primary); border-radius: var(--radius-md); padding: var(--spacing-4); background: var(--bg-secondary); text-align: center; }
+  .example-title { font-weight: var(--font-weight-semibold); font-size: var(--font-size-footnote); color: var(--text-primary); margin-bottom: var(--spacing-2); }
+  .example-value { font-family: var(--font-family-mono); font-size: var(--font-size-caption2); color: var(--text-tertiary); }
+
+  .tile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: var(--spacing-4); margin: var(--spacing-5) 0; }
+  .tile { aspect-ratio: 1; border: 1px solid var(--border-primary); border-radius: var(--radius-lg); background: var(--bg-secondary); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-2); padding: var(--spacing-3); cursor: pointer; transition: all var(--transition-normal); }
+  .tile:hover { border-color: var(--accent-blue); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .tile-preview { width: 60px; height: 60px; border-radius: var(--radius-md); }
+  .tile-label { font-size: var(--font-size-caption2); font-weight: var(--font-weight-medium); color: var(--text-tertiary); }
+
+  .divider { height: 1px; background: var(--border-primary); margin: var(--spacing-8) 0; }
+  .intro-box { background: var(--bg-secondary); border-left: 4px solid var(--accent-blue); padding: var(--spacing-4) var(--spacing-5); border-radius: 0 var(--radius-md) var(--radius-md) 0; margin: var(--spacing-5) 0; }
+  .intro-box p { margin: 0; }
+
+  code { background: var(--fill-tertiary); padding: 2px 6px; border-radius: 4px; font-family: var(--font-family-mono); font-size: var(--font-size-caption1); }
+
+  @media (max-width: 768px) { body { padding: 0 var(--spacing-4); } .color-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); } }
+</style>
+
+<div class="container">
+  <h1>Clipbara Design System</h1>
+  <p>Simple, modern Apple-native design system. Built with semantic colors, SF typography, and intuitive components that adapt seamlessly to light and dark modes.</p>
+
+  <div class="divider"></div>
+
+  <h2>Colors</h2>
+
+  <h3>Semantic Color Palette</h3>
+  <p>All colors adapt automatically to system theme. Light mode for clarity, dark mode for reduced eye strain.</p>
+
+  <h4 style="color: var(--text-tertiary); margin-top: var(--spacing-6);">Backgrounds</h4>
+  <div class="color-grid">
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #FFFFFF;"></div>
+      <div class="color-info"><div class="color-name">Primary</div><div class="color-value">#FFFFFF (L)</div></div>
+    </div>
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #F5F5F7;"></div>
+      <div class="color-info"><div class="color-name">Secondary</div><div class="color-value">#F5F5F7 (L)</div></div>
+    </div>
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #EBEBF0;"></div>
+      <div class="color-info"><div class="color-name">Tertiary</div><div class="color-value">#EBEBF0 (L)</div></div>
+    </div>
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #000000;"></div>
+      <div class="color-info"><div class="color-name">Primary</div><div class="color-value">#000000 (D)</div></div>
+    </div>
+  </div>
+
+  <h4 style="color: var(--text-tertiary); margin-top: var(--spacing-6);">Text Hierarchy</h4>
+  <div class="color-grid">
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #000000; display: flex; align-items: center; justify-content: center;"><span style="color: white; font-weight: 600;">Aa</span></div>
+      <div class="color-info"><div class="color-name">Primary</div><div class="color-value">#000000</div></div>
+    </div>
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #3C3C43; display: flex; align-items: center; justify-content: center;"><span style="color: white; font-weight: 600;">Aa</span></div>
+      <div class="color-info"><div class="color-name">Secondary</div><div class="color-value">#3C3C43</div></div>
+    </div>
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #8E8E93; display: flex; align-items: center; justify-content: center;"><span style="color: white; font-weight: 600;">Aa</span></div>
+      <div class="color-info"><div class="color-name">Tertiary</div><div class="color-value">#8E8E93</div></div>
+    </div>
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #C7C7CC;"></div>
+      <div class="color-info"><div class="color-name">Quaternary</div><div class="color-value">#C7C7CC</div></div>
+    </div>
+  </div>
+
+  <h3>Accent Colors</h3>
+  <div class="color-grid">
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #0A84FF;"></div>
+      <div class="color-info"><div class="color-name">Blue</div><div class="color-value">#0A84FF</div></div>
+    </div>
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #34C759;"></div>
+      <div class="color-info"><div class="color-name">Green</div><div class="color-value">#34C759</div></div>
+    </div>
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #FF3B30;"></div>
+      <div class="color-info"><div class="color-name">Red</div><div class="color-value">#FF3B30</div></div>
+    </div>
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #FF9500;"></div>
+      <div class="color-info"><div class="color-name">Orange</div><div class="color-value">#FF9500</div></div>
+    </div>
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #AF52DE;"></div>
+      <div class="color-info"><div class="color-name">Purple</div><div class="color-value">#AF52DE</div></div>
+    </div>
+    <div class="color-swatch">
+      <div class="color-sample" style="background: #FFCC00;"></div>
+      <div class="color-info"><div class="color-name">Yellow</div><div class="color-value">#FFCC00</div></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>Typography</h2>
+  <p>Apple's San Francisco font stack with a complete type scale from Display (32px) to Caption2 (11px).</p>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Style</th>
+        <th>Size</th>
+        <th>Weight</th>
+        <th>Line Height</th>
+        <th>Usage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="font-size: 32px; font-weight: 700;">Display</td>
+        <td>32px</td>
+        <td>Bold (700)</td>
+        <td>1.2</td>
+        <td>Hero headlines</td>
+      </tr>
+      <tr>
+        <td style="font-size: 28px; font-weight: 700;">Title 1</td>
+        <td>28px</td>
+        <td>Bold (700)</td>
+        <td>1.2</td>
+        <td>Page titles</td>
+      </tr>
+      <tr>
+        <td style="font-size: 22px; font-weight: 700;">Title 2</td>
+        <td>22px</td>
+        <td>Bold (700)</td>
+        <td>1.2</td>
+        <td>Section headers</td>
+      </tr>
+      <tr>
+        <td style="font-size: 17px; font-weight: 600;">Headline</td>
+        <td>17px</td>
+        <td>Semibold (600)</td>
+        <td>1.2</td>
+        <td>Component titles</td>
+      </tr>
+      <tr>
+        <td style="font-size: 17px;">Body</td>
+        <td>17px</td>
+        <td>Regular (400)</td>
+        <td>1.5</td>
+        <td>Main content</td>
+      </tr>
+      <tr>
+        <td style="font-size: 16px; font-weight: 500;">Callout</td>
+        <td>16px</td>
+        <td>Medium (500)</td>
+        <td>1.5</td>
+        <td>Interactive text</td>
+      </tr>
+      <tr>
+        <td style="font-size: 15px;">Subheadline</td>
+        <td>15px</td>
+        <td>Regular (400)</td>
+        <td>1.5</td>
+        <td>Secondary headers</td>
+      </tr>
+      <tr>
+        <td style="font-size: 13px;">Footnote</td>
+        <td>13px</td>
+        <td>Regular (400)</td>
+        <td>1.5</td>
+        <td>Labels, hints</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+
+  <h2>Spacing & Radius</h2>
+
+  <h3>Spacing Scale</h3>
+  <p>Consistent 4px base with multipliers. Use these values for margins, padding, gaps.</p>
+  <div class="example-grid">
+    <div class="example-item"><div class="example-title">sp-1</div><div class="example-value">2px</div></div>
+    <div class="example-item"><div class="example-title">sp-2</div><div class="example-value">4px</div></div>
+    <div class="example-item"><div class="example-title">sp-3</div><div class="example-value">8px</div></div>
+    <div class="example-item"><div class="example-title">sp-4</div><div class="example-value">12px</div></div>
+    <div class="example-item"><div class="example-title">sp-5</div><div class="example-value">16px</div></div>
+    <div class="example-item"><div class="example-title">sp-6</div><div class="example-value">20px</div></div>
+    <div class="example-item"><div class="example-title">sp-7</div><div class="example-value">24px</div></div>
+    <div class="example-item"><div class="example-title">sp-8</div><div class="example-value">32px</div></div>
+  </div>
+
+  <h3>Border Radius</h3>
+  <div class="example-grid">
+    <div class="example-item"><div class="example-title">xs</div><div class="example-value">4px</div></div>
+    <div class="example-item"><div class="example-title">sm</div><div class="example-value">6px</div></div>
+    <div class="example-item"><div class="example-title">md</div><div class="example-value">8px</div></div>
+    <div class="example-item"><div class="example-title">lg</div><div class="example-value">12px</div></div>
+    <div class="example-item"><div class="example-title">xl</div><div class="example-value">16px</div></div>
+    <div class="example-item"><div class="example-title">full</div><div class="example-value">9999px</div></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>Components</h2>
+
+  <h3>Buttons</h3>
+  <div class="component">
+    <h4>All Variants</h4>
+    <div class="component-demo">
+      <div class="btn-group">
+        <button class="btn btn-primary">Primary Action</button>
+        <button class="btn btn-secondary">Secondary</button>
+        <button class="btn btn-secondary" disabled>Disabled</button>
+      </div>
+    </div>
+  </div>
+
+  <h3>Alerts & Status</h3>
+  <div class="component">
+    <h4>Status Messages</h4>
+    <div class="component-demo">
+      <div class="alert alert-success"><div class="alert-icon">✓</div><div><strong>Success</strong><br>Item copied to clipboard</div></div>
+      <div class="alert alert-warning"><div class="alert-icon">⚠</div><div><strong>Warning</strong><br>Sensitive content detected</div></div>
+      <div class="alert alert-error"><div class="alert-icon">✕</div><div><strong>Error</strong><br>Failed to process item</div></div>
+      <div class="alert alert-info"><div class="alert-icon">ℹ</div><div><strong>Info</strong><br>New clipboard item available</div></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>Quick Access Tiles</h2>
+  <p>Fast visual access to recent clipboard items. Horizontal scrollable, 70px height, up to 5 tiles visible. Click to paste instantly.</p>
+
+  <h3>Tile Variants by Content Type</h3>
+  <div class="component">
+    <h4>Interactive Examples</h4>
+    <div class="component-demo">
+      <div class="tile-grid">
+        <div class="tile">
+          <div class="tile-preview" style="background: linear-gradient(135deg, #3F63E2, rgba(63, 99, 226, 0.5));"></div>
+          <div class="tile-label">Text</div>
+        </div>
+        <div class="tile">
+          <div class="tile-preview" style="background: linear-gradient(135deg, #2B3B95, rgba(43, 59, 149, 0.5));"></div>
+          <div class="tile-label">Image</div>
+        </div>
+        <div class="tile">
+          <div class="tile-preview" style="background: linear-gradient(135deg, #009688, rgba(0, 150, 136, 0.5));"></div>
+          <div class="tile-label">URL</div>
+        </div>
+        <div class="tile">
+          <div class="tile-preview" style="background: linear-gradient(135deg, #E57E21, rgba(229, 126, 33, 0.5));"></div>
+          <div class="tile-label">File</div>
+        </div>
+        <div class="tile">
+          <div class="tile-preview" style="background: linear-gradient(135deg, #0A84FF, rgba(10, 132, 255, 0.5));"></div>
+          <div class="tile-label">Screenshot</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="intro-box">
+    <strong>Key Specs:</strong> Fixed 70px height. Horizontal scroll only. 8px gaps. Hover shows tooltip with content preview, app name, timestamp. Click to paste. Type badge for quick identification. Smooth scrolling, no jank.
+  </div>
+
+  <h3>Tile States</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>State</th>
+        <th>Border</th>
+        <th>Shadow</th>
+        <th>Transform</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Default</td>
+        <td>1px primary</td>
+        <td>None</td>
+        <td>None</td>
+      </tr>
+      <tr>
+        <td>Hover</td>
+        <td>1px blue</td>
+        <td>Medium</td>
+        <td>-2px Y</td>
+      </tr>
+      <tr>
+        <td>Active</td>
+        <td>1px blue</td>
+        <td>Small</td>
+        <td>0px</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+
+  <h2>Motion & Transitions</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Speed</th>
+        <th>Duration</th>
+        <th>Easing</th>
+        <th>Use</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Fast</td>
+        <td>150ms</td>
+        <td>cubic-bezier(0.4, 0, 0.2, 1)</td>
+        <td>Hover states</td>
+      </tr>
+      <tr>
+        <td>Normal</td>
+        <td>200ms</td>
+        <td>cubic-bezier(0.4, 0, 0.2, 1)</td>
+        <td>UI state changes</td>
+      </tr>
+      <tr>
+        <td>Slow</td>
+        <td>300ms</td>
+        <td>cubic-bezier(0.4, 0, 0.2, 1)</td>
+        <td>Modals, major transitions</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+
+  <h2>Implementation</h2>
+  <h3>Quick Access Tiles Checklist</h3>
+  <ul>
+    <li>☐ Horizontal scrollable container, max 5 tiles visible</li>
+    <li>☐ Fixed 70px height for menu bar dropdown</li>
+    <li>☐ Content-type accent colors with gradient preview</li>
+    <li>☐ Hover: blue border + medium shadow + -2px Y lift</li>
+    <li>☐ Single-click paste (no confirmation needed)</li>
+    <li>☐ Tooltip on hover: preview, app name, timestamp</li>
+    <li>☐ Keyboard navigation: arrow keys, Enter to paste</li>
+    <li>☐ Type badges for visual identification</li>
+    <li>☐ Smooth scrolling, zero jank</li>
+    <li>☐ Empty state: "No clipboard history"</li>
+    <li>☐ Light/dark mode support (automatic via CSS vars)</li>
+    <li>☐ Async thumbnail generation, no UI blocking</li>
+  </ul>
+
+  <div style="height: 2px; background: var(--border-primary); margin: var(--spacing-8) 0;"></div>
+</div>
